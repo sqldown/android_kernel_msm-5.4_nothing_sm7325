@@ -1,3 +1,16 @@
+# NOTHING Phone(1) Release Note
+1. NOS 3.0(Spacewar-V3.0-250108-1938)
+  - The opensource of the initial release
+  - devicetree
+     Both of repository has moved to vendor/qcom/proprietary/devicetree/msm-extra in NOTHING opensource.
+     Please make sure the path of vendor_links is correct when you lunch and building image
+      - vendor/qcom/proprietary/camera-devicetree/
+      - vendor/qcom/proprietary/display-devicetree/display
+  - Supplementary note: Please verify the soft link yourself.
+    Qualcomm's original design
+    There is a symbolic link named 'vendor' in msm-5.4/arch/arm64/boot/dts/ that points to 'devicetree'.
+    msm-5.4/arch/arm64/boot/dts/vendor -> vendor/qcom/proprietary/devicetree
+
 # How do I submit patches to Android Common Kernels
 
 1. BEST: Make all of your changes to upstream Linux. If appropriate, backport to the stable releases.
