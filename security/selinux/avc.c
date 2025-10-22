@@ -31,6 +31,12 @@
 #include "avc_ss.h"
 #include "classmap.h"
 
+#ifdef CONFIG_KSU_SUSFS
+extern u32 susfs_ksu_sid;
+extern u32 susfs_kernel_sid;
+bool susfs_is_avc_log_spoofing_enabled = false;
+#endif
+
 #define AVC_CACHE_SLOTS			512
 #define AVC_DEF_CACHE_THRESHOLD		512
 #define AVC_CACHE_RECLAIM		16
@@ -127,6 +133,91 @@ static inline int avc_hash(u32 ssid, u32 tsid, u16 tclass)
 }
 
 /**
+<<<<<<< HEAD
+=======
+ * avc_dump_av - Display an access vector in human-readable form.
+ * @tclass: target security class
+ * @av: access vector
+ */
+static void avc_dump_av(struct audit_buffer *ab, u16 tclass, u32 av)
+{
+	const char **perms;
+	int i, perm;
+
+	if (av == 0) {
+		audit_log_format(ab, " null");
+		return;
+	}
+
+	BUG_ON(!tclass || tclass >= ARRAY_SIZE(secclass_map));
+	perms = secclass_map[tclass-1].perms;
+
+	audit_log_format(ab, " {");
+	i = 0;
+	perm = 1;
+	while (i < (sizeof(av) * 8)) {
+		if ((perm & av) && perms[i]) {
+			audit_log_format(ab, " %s", perms[i]);
+			av &= ~perm;
+		}
+		i++;
+		perm <<= 1;
+	}
+
+	if (av)
+		audit_log_format(ab, " 0x%x", av);
+
+	audit_log_format(ab, " }");
+}
+
+/**
+ * avc_dump_query - Display a SID pair and a class in human-readable form.
+ * @ssid: source security identifier
+ * @tsid: target security identifier
+ * @tclass: target security class
+ */
+static void avc_dump_query(struct audit_buffer *ab, struct selinux_state *state,
+			   u32 ssid, u32 tsid, u16 tclass)
+{
+	int rc;
+	char *scontext;
+	u32 scontext_len;
+
+	rc = security_sid_to_context(state, ssid, &scontext, &scontext_len);
+	if (rc)
+		audit_log_format(ab, "ssid=%d", ssid);
+	else {
+		audit_log_format(ab, "scontext=%s", scontext);
+		kfree(scontext);
+	}
+
+	rc = security_sid_to_context(state, tsid, &scontext, &scontext_len);
+#ifdef CONFIG_KSU_SUSFS
+	if (unlikely(tsid == susfs_ksu_sid && susfs_is_avc_log_spoofing_enabled)) {
+		if (rc) {
+			audit_log_format(ab, " tsid=%d", susfs_kernel_sid);
+		} else {
+			audit_log_format(ab, " tcontext=%s", "u:r:kernel:s0");
+			kfree(scontext);
+		}
+		goto bypass_orig_flow;
+	}
+#endif
+	if (rc)
+		audit_log_format(ab, " tsid=%d", tsid);
+	else {
+		audit_log_format(ab, " tcontext=%s", scontext);
+		kfree(scontext);
+	}
+#ifdef CONFIG_KSU_SUSFS
+bypass_orig_flow:
+#endif
+	BUG_ON(!tclass || tclass >= ARRAY_SIZE(secclass_map));
+	audit_log_format(ab, " tclass=%s", secclass_map[tclass-1].name);
+}
+
+/**
+>>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
  * avc_init - Initialize the AVC.
  *
  * Initialize the access vector cache.
