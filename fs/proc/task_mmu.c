@@ -21,10 +21,10 @@
 #include <linux/uaccess.h>
 #include <linux/pkeys.h>
 #include <linux/mm_inline.h>
+#include <linux/ctype.h>
 #if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP)
 #include <linux/susfs_def.h>
 #endif
-#include <linux/ctype.h>
 
 #include <asm/elf.h>
 #include <asm/tlb.h>
@@ -946,7 +946,7 @@ static void show_smap_vma(struct seq_file *m, void *v)
 		SEQ_PUT_DEC(" kB\nMMUPageSize:    ", 4);
 		seq_puts(m, " kB\n");
 
-		__show_smap(m, &mss);
+		__show_smap(m, &mss, false);
 
 		seq_printf(m, "THPeligible:    %d\n", transparent_hugepage_enabled(vma));
 
