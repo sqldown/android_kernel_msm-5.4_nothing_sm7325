@@ -2338,10 +2338,6 @@ proc_map_files_readdir(struct file *file, struct dir_context *ctx)
 			mmput(mm);
 			goto out_put_task;
 		}
-		for (i = 0, vma = mm->mmap, pos = 2; vma;
-				vma = vma->vm_next) {
-			if (!vma->vm_file)
-				continue;
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 		if (unlikely(file_inode(vma->vm_file)->i_mapping->flags & BIT_SUS_MAPS) &&
 			susfs_is_current_proc_umounted())
@@ -2349,8 +2345,6 @@ proc_map_files_readdir(struct file *file, struct dir_context *ctx)
 			continue;
 		}
 #endif
-			if (++pos <= ctx->pos)
-				continue;
 
 		p->start = vma->vm_start;
 		p->end = vma->vm_end;
