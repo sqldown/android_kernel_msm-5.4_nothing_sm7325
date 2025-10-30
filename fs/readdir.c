@@ -267,16 +267,13 @@ struct linux_dirent {
 struct getdents_callback {
 	struct dir_context ctx;
 	struct linux_dirent __user * current_dir;
-<<<<<<< HEAD
 	int prev_reclen;
-=======
 	struct linux_dirent __user * previous;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	struct super_block *sb;
 	bool is_base_dentry_android_data_root_dir;
 	bool is_base_dentry_sdcard_root_dir;
 #endif
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 	int count;
 	int error;
 };
@@ -290,13 +287,10 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 	unsigned long d_ino;
 	int reclen = ALIGN(offsetof(struct linux_dirent, d_name) + namlen + 2,
 		sizeof(long));
-<<<<<<< HEAD
 	int prev_reclen;
-=======
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	struct inode *inode;
 #endif
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 
 	buf->error = verify_dirent_name(name, namlen);
 	if (unlikely(buf->error))
@@ -309,11 +303,6 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 		buf->error = -EOVERFLOW;
 		return -EOVERFLOW;
 	}
-<<<<<<< HEAD
-	prev_reclen = buf->prev_reclen;
-	if (prev_reclen && signal_pending(current))
-		return -EINTR;
-=======
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	if (buf->is_base_dentry_android_data_root_dir) {
 		if (susfs_is_sus_android_data_d_name_found(name)) {
@@ -336,14 +325,12 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 	iput(inode);
 orig_flow:
 #endif
-	dirent = buf->previous;
-	if (dirent) {
-		if (signal_pending(current))
-			return -EINTR;
+	prev_reclen = buf->prev_reclen;
+	if (prev_reclen && signal_pending(current))
+		return -EINTR;
 		if (__put_user(offset, &dirent->d_off))
 			goto efault;
 	}
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 	dirent = buf->current_dir;
 	prev = (void __user *) dirent - prev_reclen;
 	if (!user_access_begin(prev, reclen + prev_reclen))
@@ -429,16 +416,13 @@ orig_flow:
 struct getdents_callback64 {
 	struct dir_context ctx;
 	struct linux_dirent64 __user * current_dir;
-<<<<<<< HEAD
 	int prev_reclen;
-=======
 	struct linux_dirent64 __user * previous;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	struct super_block *sb;
 	bool is_base_dentry_android_data_root_dir;
 	bool is_base_dentry_sdcard_root_dir;
 #endif
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 	int count;
 	int error;
 };
@@ -451,13 +435,10 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 		container_of(ctx, struct getdents_callback64, ctx);
 	int reclen = ALIGN(offsetof(struct linux_dirent64, d_name) + namlen + 1,
 		sizeof(u64));
-<<<<<<< HEAD
 	int prev_reclen;
-=======
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	struct inode *inode;
 #endif
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 
 	buf->error = verify_dirent_name(name, namlen);
 	if (unlikely(buf->error))
@@ -465,15 +446,9 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	buf->error = -EINVAL;	/* only used if we fail.. */
 	if (reclen > buf->count)
 		return -EINVAL;
-<<<<<<< HEAD
 	prev_reclen = buf->prev_reclen;
 	if (prev_reclen && signal_pending(current))
 		return -EINTR;
-=======
-	dirent = buf->previous;
-	if (dirent) {
-		if (signal_pending(current))
-			return -EINTR;
 		if (__put_user(offset, &dirent->d_off))
 			goto efault;
 	}
