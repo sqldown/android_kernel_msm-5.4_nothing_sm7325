@@ -34,6 +34,7 @@
 	unsafe_put_user(0, dst+len, label);			\
 	unsafe_copy_to_user(dst, src, len, label);		\
 } while (0)
+#endif
 
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 #include <linux/susfs_def.h>
@@ -311,6 +312,9 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 		buf->error = -EOVERFLOW;
 		return -EOVERFLOW;
 	}
+	prev_reclen = buf->prev_reclen;
+	if (prev_reclen && signal_pending(current))
+		return -EINTR;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	if (buf->is_base_dentry_android_data_root_dir) {
 		if (susfs_is_sus_android_data_d_name_found(name)) {
@@ -333,9 +337,6 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 	iput(inode);
 orig_flow:
 #endif
-	prev_reclen = buf->prev_reclen;
-	if (prev_reclen && signal_pending(current))
-		return -EINTR;
 	}
 	
 	dirent = buf->current_dir;
