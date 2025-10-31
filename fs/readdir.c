@@ -27,6 +27,14 @@
  * Note the "unsafe_put_user() semantics: we goto a
  * label for errors.
  */
+#define unsafe_copy_dirent_name(_dst, _src, _len, label) do {	\
+	char __user *dst = (_dst);				\
+	const char *src = (_src);				\
+	size_t len = (_len);					\
+	unsafe_put_user(0, dst+len, label);			\
+	unsafe_copy_to_user(dst, src, len, label);		\
+} while (0)
+
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 #include <linux/susfs_def.h>
 extern bool susfs_is_inode_sus_path(struct inode *inode);
@@ -328,9 +336,8 @@ orig_flow:
 	prev_reclen = buf->prev_reclen;
 	if (prev_reclen && signal_pending(current))
 		return -EINTR;
-		if (__put_user(offset, &dirent->d_off))
-			goto efault;
 	}
+	
 	dirent = buf->current_dir;
 	prev = (void __user *) dirent - prev_reclen;
 	if (!user_access_begin(prev, reclen + prev_reclen))
@@ -417,7 +424,6 @@ struct getdents_callback64 {
 	struct dir_context ctx;
 	struct linux_dirent64 __user * current_dir;
 	int prev_reclen;
-	struct linux_dirent64 __user * previous;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	struct super_block *sb;
 	bool is_base_dentry_android_data_root_dir;
@@ -449,8 +455,6 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	prev_reclen = buf->prev_reclen;
 	if (prev_reclen && signal_pending(current))
 		return -EINTR;
-		if (__put_user(offset, &dirent->d_off))
-			goto efault;
 	}
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	if (buf->is_base_dentry_android_data_root_dir) {
@@ -474,7 +478,6 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	iput(inode);
 orig_flow:
 #endif
->>>>>>> 6301ac2e7f4f (BACKPORT: KernelSU: Implement SuspiciousFS (SusFS) v1.5.12@f095e800)
 	dirent = buf->current_dir;
 	prev = (void __user *)dirent - prev_reclen;
 	if (!user_access_begin(prev, reclen + prev_reclen))
