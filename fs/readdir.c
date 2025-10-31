@@ -312,9 +312,6 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 		buf->error = -EOVERFLOW;
 		return -EOVERFLOW;
 	}
-	prev_reclen = buf->prev_reclen;
-	if (prev_reclen && signal_pending(current))
-		return -EINTR;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	if (buf->is_base_dentry_android_data_root_dir) {
 		if (susfs_is_sus_android_data_d_name_found(name)) {
@@ -337,7 +334,9 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 	iput(inode);
 orig_flow:
 #endif
-	}
+    prev_reclen = buf->prev_reclen;
+	if (prev_reclen && signal_pending(current))
+		return -EINTR;
 	
 	dirent = buf->current_dir;
 	prev = (void __user *) dirent - prev_reclen;
@@ -453,9 +452,6 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	buf->error = -EINVAL;	/* only used if we fail.. */
 	if (reclen > buf->count)
 		return -EINVAL;
-	prev_reclen = buf->prev_reclen;
-	if (prev_reclen && signal_pending(current))
-		return -EINTR;
 	}
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	if (buf->is_base_dentry_android_data_root_dir) {
@@ -479,10 +475,9 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	iput(inode);
 orig_flow:
 #endif
-	dirent = buf->current_dir;
-	prev = (void __user *)dirent - prev_reclen;
-	if (!user_access_begin(prev, reclen + prev_reclen))
-		goto efault;
+	prev_reclen = buf->prev_reclen;
+ if (prev_reclen && signal_pending(current))
+  return -EINTR;
 
 	/* This might be 'dirent->d_off', but if so it will get overwritten */
 	unsafe_put_user(offset, &prev->d_off, efault_end);
